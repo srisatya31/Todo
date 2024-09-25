@@ -82,13 +82,19 @@ function App() {
      const currentItems = todos.filter(item => item.isActive === true)
      return setFilterItem([...currentItems])
    }
+   if (category === 'clear'){
+    setFilterItem([]);
+    return;
+   }
    console.log(todos);
  }, [category, todos])
 
 
  const clearTodo = () => {
-   setTodos([])
-   localStorage.setItem('todos', JSON.stringify([]))
+   setTodos([]);
+   localStorage.setItem('todos', JSON.stringify([]));
+   setCategory('clear');
+   console.log(todos);
  }
 
 
@@ -115,11 +121,9 @@ function App() {
         onClick={() => setCategory('done')}
         className={`btn btn-md shadow mr-2 ${category === 'done' ? 'text-white bg-primary' : 'text-dark'}`}>Done
       </button>
-      <button
-        onClick={clearTodo}
-        className={`btn btn-md shadow ${category === 'clear' ? 'text-white bg-primary' : 'text-dark'}`}>
-        Clear
-      </button>
+      <button 
+       onClick={clearTodo}
+      className={`btn btn-md shadow ${category === 'clear' ? 'text-white bg-primary' : ''}`}> Clear </button>
      </div>
      <div className="todo-container mt-4">
        {filterItem.length === 0 ? <p className="text-center text-white"> there is no todo items in <span className="font-weight-bold border-bottom" >{category}</span> categories </p> :
