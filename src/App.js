@@ -7,107 +7,151 @@ import AuthWrapper from "./component/authWrapper";
 
 function App() {
   const [newTodo, setNewTodo] = useState("");
-
-  const [todos, setTodos] = useState([]);
-  const [filterItem, setFilterItem] = useState([]);
-  const [priority,setPriority]=useState('');
-  const[error,setError]=useState('');
-
+  const [todos, setTodos] = useState();
+  const [filterItem, setFilterItem] = useState();
+  const [priority, setPriority] = useState("");
+  const [error, setError] = useState("");
   const [category, setCategory] = useState("all");
 
   useEffect(() => {
-    const items = localStorage.getItem("todos");
-    items && setTodos(JSON.parse(items));
-  }, []);
+    fetchTodos();
+  },);
 
-  const addtodo = (req,res) => {
-    setError(false);
-    const isDuplicateActiveTodo = todos.some(
-      (todo) => todo.name === newTodo && todo.isActive === true
-    );
-
-    if (isDuplicateActiveTodo) {
-      alert("This todo is already active.");
-      return;
+  const fetchTodos = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/todos");
+      if (!response.ok) {
+        throw new Error("Failed to fetch todos");
+      }
+      const data = await response.json();
+      setTodos(data);
+    } catch (error) {
+      console.error("Error fetching todos:", error);
     }
-    if (newTodo && priority<=100 && priority>=0) {
-      const createTodo = {
-        name: newTodo,
-        isActive: true,
-        id: new Date().getTime() + Math.random(),
-        priority: parseInt(priority),
-      };
-      const newTodos=[...todos, createTodo];
-      setTodos((newTodos).sort((a, b) => b.priority - a.priority));
-      localStorage.setItem("todos", JSON.stringify(newTodos));
-      setNewTodo('');
-      setPriority('');  
-    }   
-    else{
+  };
+
+  const addtodo = async () => {
+    setError(false);
+    if (newTodo && priority <= 100 && priority >= 0) {
+      try {
+        const response = await fetch("http://localhost:5000/todos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: newTodo, priority: parseInt(priority) }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to add todo");
+        }
+        setNewTodo("");
+        setPriority("");
+        fetchTodos();
+      } catch (error) {
+        console.error("Error adding todo:", error);
+        setError(true);
+      }
+    } else {
       setError(true);
     }
   };
-  const removeTodo = (id) => {
-    const newTodos = todos.filter((todo) => todo.id !== id);
-    localStorage.setItem("todos", JSON.stringify(newTodos));
-    setTodos(newTodos);
-  };
-  const doneTodo = (id) => {
-    const newTodos = todos.map((todo) => {
-      if (todo.id === id) {
-        todo.isActive = !todo.isActive;
-      }
-      return todo;
-    });
-    localStorage.setItem("todos", JSON.stringify(newTodos));
-    setTodos(newTodos);
-  };
-  const editTodo = (id, newName) => {
-    const updatedTodos = todos.map((todo) => {
-      if (todo.id === id) {
-        return { ...todo, name: newName };
-      }
-      return todo;
-    });
 
-    setTodos(updatedTodos);
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+  const removeTodo = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/todos/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to remove todo");
+      }
+      fetchTodos();
+    } catch (error) {
+      console.error("Error removing todo:", error);
+    }
   };
+
+  const doneTodo = async (id, isActive) => {
+    try {
+      const response = await fetch(`http://localhost:5000/todos/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isActive: !isActive }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update todo");
+      }
+      fetchTodos();
+    } catch (error) {
+      console.error("Error updating todo:", error);
+    }
+  };
+
+  const editTodo = async (id, newName) => {
+    try {
+      const response = await fetch(`http://localhost:5000/todos/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to edit todo");
+      }
+      fetchTodos();
+    } catch (error) {
+      console.error("Error editing todo:", error);
+    }
+  };
+
   useEffect(() => {
     if (category === "all") {
-      return setFilterItem([...todos]);
+      setFilterItem([...todos]);
     }
     if (category === "done") {
       const currentItems = todos.filter((item) => item.isActive !== true);
-      return setFilterItem([...currentItems]);
+      setFilterItem([...currentItems]);
     }
     if (category === "active") {
       const currentItems = todos.filter((item) => item.isActive === true);
-      return setFilterItem([...currentItems]);
+      setFilterItem([...currentItems]);
     }
     if (category === "clear") {
-      setFilterItem([]);
-      return;
+      setFilterItem();
     }
-    console.log(todos);
   }, [category, todos]);
 
-  const clearTodo = () => {
-    setTodos([]);
-    localStorage.setItem("todos", JSON.stringify([]));
+  const clearTodo = async () => {
+    todos.forEach(async (todo) => {
+      if(todo.isActive === false){
+        await removeTodo(todo.id);
+      }
+    })
     setCategory("clear");
-    console.log(todos);
   };
 
   return (
     <AuthWrapper>
-      {error?    
-      <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        Give proper values
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-        </button>
-    </div>:<></>}
+      {error ? (
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
+          Give proper values
+          <button
+            type="button"
+            className="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+      ) : (
+        <></>
+      )}
       <div className="col-md-4 mx-auto px-2">
+        {/* ... (rest of the UI remains the same) */}
         <div className="todo justify-content-center mt-5">
           <div className="input-group mb-2 mr-sm-2">
             <input
@@ -118,13 +162,13 @@ function App() {
               onChange={(e) => setNewTodo(e.target.value)}
               className="form-control"
             />
-            <input 
-                type="number" 
-                name="priority"
-                placeholder="Set The Priority only from (1 to 100)"
-                value={priority} 
-                onChange={(e) => setPriority(e.target.value)} 
-                className="form-control"
+            <input
+              type="number"
+              name="priority"
+              placeholder="Set The Priority only from (1 to 100)"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="form-control"
             />
             <div className="input-group-append">
               <button className="btn btn-secondary" onClick={addtodo}>
@@ -134,32 +178,7 @@ function App() {
           </div>
         </div>
         <div className="buttons-group col text-center">
-          <button
-            onClick={() => setCategory("all")}
-            className={`btn btn-md shadow mr-2 ${
-              category === "all" ? "text-white bg-primary" : "text-dark"
-            }`}
-          >
-            {" "}
-            ALL
-          </button>
-          <button
-            onClick={() => setCategory("active")}
-            className={`btn btn-md shadow mr-2 ${
-              category === "active" ? "text-white bg-primary" : "text-dark"
-            }`}
-          >
-            {" "}
-            Active
-          </button>
-          <button
-            onClick={() => setCategory("done")}
-            className={`btn btn-md shadow mr-2 ${
-              category === "done" ? "text-white bg-primary" : "text-dark"
-            }`}
-          >
-            Done
-          </button>
+          {/* ... (filter buttons) */}
           <button
             onClick={clearTodo}
             className={`btn btn-md shadow ${

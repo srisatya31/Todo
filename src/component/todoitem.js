@@ -3,13 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const TodoItem = (props) => {
-  const { name, isActive, id, priority} = props.todo;
+  const { name, isActive, id, priority } = props.todo;
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(name);
 
   const handleEdit = () => {
-    props.editTodo(id, editedName); 
-    setIsEditing(false); 
+    props.editTodo(id, editedName);
+    setIsEditing(false);
   };
 
   return (
@@ -18,8 +18,8 @@ const TodoItem = (props) => {
         {/* Checkbox for marking todo as done */}
         <input
           type="checkbox"
-          checked={!isActive} 
-          onChange={() => props.doneTodo(id)} 
+          checked={!isActive}
+          onChange={() => props.doneTodo(id, isActive)}
           className="mr-2"
         />
         {isEditing ? (
@@ -31,8 +31,8 @@ const TodoItem = (props) => {
           />
         ) : (
           <>
-          <span className={isActive ? '' : 'line-through'}>{name}</span>
-          <span style={{paddingLeft:"2rem",fontSize:"14px"}}>{priority}</span>
+            <span className={isActive ? '' : 'line-through'}>{name}</span>
+            <span style={{ paddingLeft: "2rem", fontSize: "14px" }}>{priority}</span>
           </>
         )}
       </div>
@@ -49,6 +49,3 @@ const TodoItem = (props) => {
 };
 
 export default TodoItem;
-
-
-
