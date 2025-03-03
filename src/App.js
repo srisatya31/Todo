@@ -99,6 +99,11 @@ function App() {
     console.log(todos);
   };
 
+  const addOnKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      addtodo()
+    }
+  }
   return (
     <AuthWrapper>
       {error?    
@@ -117,6 +122,7 @@ function App() {
               value={newTodo}
               onChange={(e) => setNewTodo(e.target.value)}
               className="form-control"
+              onKeyDown={(e) => {addOnKeyDown(e)}}
             />
             <input 
                 type="number" 
@@ -125,6 +131,7 @@ function App() {
                 value={priority} 
                 onChange={(e) => setPriority(e.target.value)} 
                 className="form-control"
+                onKeyDown={(e) => {addOnKeyDown(e)}}
             />
             <div className="input-group-append">
               <button className="btn btn-secondary" onClick={addtodo}>
@@ -174,7 +181,7 @@ function App() {
           {filterItem.length === 0 ? (
             <p className="text-center text-black">
               {" "}
-              there is no todo items in{" "}
+              There is no todo items in{" "}
               <span className="font-weight-bold border-bottom">
                 {category}
               </span>{" "}

@@ -12,6 +12,11 @@ const TodoItem = (props) => {
     setIsEditing(false); 
   };
 
+  const editOnKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleEdit()
+    }
+  }
   return (
     <div className="list-group-item align-items-center d-flex justify-content-between border-bottom shadow my-1">
       <div className="d-flex align-items-center">
@@ -28,6 +33,7 @@ const TodoItem = (props) => {
             value={editedName}
             onChange={(e) => setEditedName(e.target.value)}
             onBlur={handleEdit}
+            onKeyDown={editOnKeyDown}
           />
         ) : (
           <>
